@@ -5,17 +5,9 @@ interface ProgressBarProps {
     value: number;
     max: number;
     color: string;
-    width: number;
-    height: number;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({
-    value,
-    max,
-    color,
-    width,
-    height,
-}) => {
+const ProgressBar: React.FC<ProgressBarProps> = ({ value, max, color }) => {
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
@@ -32,7 +24,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
             style={{
                 border: `1px solid ${color}`,
                 width: "100%",
-                height: "100%",
+                // height: "100%",
                 borderRadius: "10px",
                 overflow: "hidden",
             }}

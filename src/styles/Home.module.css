@@ -1,21 +1,76 @@
-.main {
+.screen {
+    width: 800px;
+    height: 600px;
+    background-color: black;
+    color: white;
+    transition: background-color 1s, color 1s;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    /* align-items: center; */
+    /* gap: 20px; */
+    height: 100%;
+    width: 100%;
+}
+
+.mainPanel {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6rem;
-    min-height: 100vh;
+    flex-grow: 1;
+    height: 100%;
+    overflow: hidden;
+    /* border: 1px solid white; */
+}
+
+.sidePanel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    width: 350px;
+    height: 100%;
+    overflow: hidden;
+    /* border: 1px solid white; */
 }
 
 .coverArt {
-    border-radius: 10px;
+    border-radius: 5px;
     object-fit: cover;
     box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
 }
 
+.metadata {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    gap: 10px;
+}
+
+.trackName {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.artistName {
+    font-size: 25px;
+    font-weight: 500;
+}
+
+.albumName {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.information {
+    height: 100%;
+}
+
 .progress {
-    width: 750px;
-    height: 7px;
+    height: 35px;
+    padding: 15px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -23,6 +78,7 @@
 }
 
 .progressMain {
+    height: 5px;
     transition: width 1s, background-color 1s, color 1s;
 }
 
