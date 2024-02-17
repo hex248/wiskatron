@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 import { useState, useEffect } from "react";
 import { Artist, CurrentlyPlaying } from "../lib/spotify";
+import path from "path";
 
 const formatMSToMins = (ms: number | undefined) => {
     if (!ms) return "0:00";
@@ -37,18 +38,31 @@ export default function Home() {
             .then((res) => res.json())
             .then((data) => {
                 setCurrentlyPlaying(data);
-                setInfo({
-                    name: data.item.name,
-                    artists: data.item.artists?.map((a: Artist) => a.name),
-                    podcast:
-                        data.item.type === "episode" ? data.item.show.name : "",
-                    image:
-                        data.item.album?.images[0].url ||
-                        data.item.images[0].url,
-                    is_playing: data.is_playing,
-                    progress_ms: data.progress_ms,
-                    duration_ms: data.item.duration_ms,
-                });
+                if (data.item?.is_local) {
+                    setInfo({
+                        name: data.item.name,
+                        artists: data.item.artists?.map((a: Artist) => a.name),
+                        image: "/placeholder.png",
+                        is_playing: data.is_playing,
+                        progress_ms: data.progress_ms,
+                        duration_ms: data.item.duration_ms,
+                    });
+                } else {
+                    setInfo({
+                        name: data.item.name,
+                        artists: data.item.artists?.map((a: Artist) => a.name),
+                        podcast:
+                            data.item.type === "episode"
+                                ? data.item.show.name
+                                : "",
+                        image:
+                            data.item.album?.images[0].url ||
+                            data.item.images[0].url,
+                        is_playing: data.is_playing,
+                        progress_ms: data.progress_ms,
+                        duration_ms: data.item.duration_ms,
+                    });
+                }
             });
     };
 
@@ -69,6 +83,7 @@ export default function Home() {
             .then((res) => res.json())
             .then((data) => {
                 document.body.style.backgroundColor = data.hex;
+                document.body.style.color = data.oppositeHex;
             });
     }, [info?.image]);
 
@@ -83,19 +98,19 @@ export default function Home() {
                 />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
+            {/* <p>{JSON.stringify(currently    Playing, null, 4)}</p> */}
             <main className={`${styles.main} ${inter.className}`}>
                 <Image
                     src={info?.image || ""}
                     alt=""
-                    width={300}
-                    height={300}
+                    width={750}
+                    height={750}
                 ></Image>
                 <h1>
                     {info?.name} - {info?.podcast || info?.artists?.join(", ")}
                 </h1>
                 {formatMSToMins(info?.progress_ms)}/
                 {formatMSToMins(info?.duration_ms)}
-                {/* <p>{JSON.stringify(info, null, 4)}</p> */}
             </main>
         </>
     );
