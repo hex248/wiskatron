@@ -100,7 +100,7 @@ export default function Home() {
             </Head>
             {/* <p>{JSON.stringify(currently    Playing, null, 4)}</p> */}
             <main className={`${styles.main} ${inter.className}`}>
-                <Image
+                <Image className={styles.coverArt}
                     src={info?.image || ""}
                     alt=""
                     width={750}

@@ -72,6 +72,12 @@
     max-width: 30ch;
 }
 
+.coverArt {
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+}
+
 .center {
     display: flex;
     justify-content: center;
