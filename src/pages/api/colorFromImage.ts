@@ -56,6 +56,18 @@ export default async function handler(
                 );
                 if (colors.length === 0) colors.push(originalColors[0]);
 
+                let constrastHSL = contrast(
+                    colors[0].hue * 360,
+                    colors[0].saturation * 100,
+                    colors[0].lightness * 100
+                );
+
+                colors[0].oppositeHex = convertToHexFromHSL(
+                    constrastHSL.h,
+                    constrastHSL.s,
+                    constrastHSL.l
+                );
+
                 res.send(
                     colors[0] || { hex: "#000000", oppositeHex: "#ffffff" }
                 );
@@ -67,3 +79,22 @@ export default async function handler(
             });
     });
 }
+
+const convertToHexFromHSL = (h: number, s: number, l: number) => {
+    l /= 100;
+    const a = (s * Math.min(l, 1 - l)) / 100;
+    const f = (n: number) => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color)
+            .toString(16)
+            .padStart(2, "0"); // convert to Hex and prefix "0" if needed
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+};
+
+const contrast = (h: number, s: number, l: number) => {
+    let oppositeHue = (h + 180) % 360;
+    let oppositeLightness = l < 50 ? l + 50 : l - 50;
+    return { h: h, s: s, l: oppositeLightness };
+};
