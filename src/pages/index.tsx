@@ -7,7 +7,6 @@ const inter = Inter({ subsets: ["latin"] });
 
 import { useState, useEffect } from "react";
 import { Artist, CurrentlyPlaying } from "../lib/spotify";
-import path from "path";
 
 const formatMSToMins = (ms: number | undefined) => {
     if (!ms) return "0:00";
@@ -31,6 +30,19 @@ export default function Home() {
         useState<CurrentlyPlaying>();
 
     const [info, setInfo] = useState<PlaybackInfo>();
+
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const timer = setTimeout(
+            () =>
+                setProgress(
+                    ((info?.progress_ms || 0) / (info?.duration_ms || 1)) * 100
+                ),
+            500
+        );
+        return () => clearTimeout(timer);
+    }, [info?.progress_ms]);
 
     const fetchPlaying = () => {
         console.log("fetching playing data");
@@ -100,7 +112,8 @@ export default function Home() {
             </Head>
             {/* <p>{JSON.stringify(currently    Playing, null, 4)}</p> */}
             <main className={`${styles.main} ${inter.className}`}>
-                <Image className={styles.coverArt}
+                <Image
+                    className={styles.coverArt}
                     src={info?.image || ""}
                     alt=""
                     width={750}
@@ -109,8 +122,9 @@ export default function Home() {
                 <h1>
                     {info?.name} - {info?.podcast || info?.artists?.join(", ")}
                 </h1>
-                {formatMSToMins(info?.progress_ms)}/
-                {formatMSToMins(info?.duration_ms)}
+                <p>{progress}</p>
+                {/* {formatMSToMins()} */}
+                {/* {formatMSToMins()} */}
             </main>
         </>
     );
