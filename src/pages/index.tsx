@@ -8,7 +8,6 @@ const inter = Inter({ subsets: ["latin"] });
 
 import { useState, useEffect } from "react";
 import { Artist } from "../lib/spotify";
-import { GeniusData } from "../lib/genius";
 
 const formatMSToMins = (ms: number | undefined) => {
     if (!ms) return "0:00";
@@ -25,6 +24,7 @@ type PlaybackInfo = {
     name: string;
     album: string;
     artists?: string[];
+    artistImages?: string[];
     podcast?: string;
     image: string;
     is_playing: boolean;
@@ -44,8 +44,6 @@ export default function Home() {
 
     const [background, setBackground] = useState("#000000");
     const [foreground, setForeground] = useState("#ffffff");
-
-    const [geniusInfo, setGeniusInfo] = useState<GeniusData>();
 
     const formatName = (name: string) => {
         let newName = name;
@@ -75,6 +73,7 @@ export default function Home() {
                         name: formatName(data.item.name),
                         album: data.item.album.name,
                         artists: data.item.artists?.map((a: Artist) => a.name),
+                        artistImages: data.item.artistImages,
                         image: "/placeholder.png",
                         is_playing: data.is_playing,
                         progress_ms: data.progress_ms,
@@ -85,6 +84,7 @@ export default function Home() {
                         name: formatName(data.item.name),
                         album: data.item.album?.name || "",
                         artists: data.item.artists?.map((a: Artist) => a.name),
+                        artistImages: data.item.artistImages,
                         podcast:
                             data.item.type === "episode"
                                 ? data.item.show.name
@@ -113,26 +113,19 @@ export default function Home() {
 
     useEffect(() => {
         // update background colour to match album art
-        fetch("/api/colorFromImage", { method: "POST", body: info?.image })
-            .then((res) => res.json())
-            .then((data) => {
-                setBackground(data.hex);
-                setForeground(data.oppositeHex);
-            });
+        if (info?.image === "/placeholder.png") return;
+        else if (info?.image == "") {
+            setBackground("#c7c7c7");
+            setForeground("#ffffff");
+        } else {
+            fetch("/api/colorFromImage", { method: "POST", body: info?.image })
+                .then((res) => res.json())
+                .then((data) => {
+                    setBackground(data.hex);
+                    setForeground(data.oppositeHex);
+                });
+        }
     }, [info?.image]);
-
-    useEffect(() => {
-        if (!info?.name) return;
-        setGeniusInfo(undefined);
-        fetch("/api/genius", {
-            method: "POST",
-            body: info?.name + " " + (info?.artists ? info?.artists[0] : ""),
-        })
-            .then((res) => res.json())
-            .then((data: any) => {
-                setGeniusInfo(data);
-            });
-    }, [info?.name, info?.artists?.join(" ")]);
 
     return (
         <>
@@ -145,7 +138,7 @@ export default function Home() {
                 />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            <main className={`${styles.main} ${inter.className}`}>
+            <main className={`${inter.className}`}>
                 <div
                     className={styles.screen}
                     style={{
@@ -158,44 +151,23 @@ export default function Home() {
                             <div
                                 className={styles.mainPanel}
                                 style={{
-                                    borderRight: `${
-                                        geniusInfo?.description != undefined &&
-                                        geniusInfo?.description != ""
-                                            ? 1
-                                            : 0
-                                    }px solid ${foreground}`,
+                                    borderRight: `0px solid ${foreground}`,
                                 }}
                             >
-                                <div className={styles.information}>
-                                    <p
-                                        style={{
-                                            opacity:
-                                                geniusInfo?.description !=
-                                                    undefined &&
-                                                geniusInfo?.description != ""
-                                                    ? 1
-                                                    : 0,
-                                            padding:
-                                                geniusInfo?.description !=
-                                                    undefined &&
-                                                geniusInfo?.description != ""
-                                                    ? "10px"
-                                                    : 0,
-                                        }}
-                                    >
-                                        {geniusInfo?.description}
-                                    </p>
+                                <div className={styles.artistImages}>
+                                    {info?.artistImages?.map((image) => (
+                                        <img
+                                            src={image}
+                                            key={image}
+                                            className={styles.artistImage}
+                                        ></img>
+                                    ))}
                                 </div>
                             </div>
                             <div className={styles.sidePanel}>
                                 <img
                                     className={styles.coverArt}
-                                    src={
-                                        info?.image == "/placeholder.png"
-                                            ? geniusInfo?.image ||
-                                              "/placeholder.png"
-                                            : info?.image
-                                    }
+                                    src={info?.image}
                                     alt=""
                                 ></img>
                                 <div className={styles.metadata}>

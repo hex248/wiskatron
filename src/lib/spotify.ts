@@ -28,6 +28,7 @@ export type TrackObject = {
     id: string;
     name: string;
     album: Album;
+    artistImages: string[];
     track_number: number;
     artists: Artist[];
     disc_number: number;
@@ -85,6 +86,7 @@ type ExternalURLs = {
 export type EpisodeObject = {
     id: string;
     name: string;
+    artistImages?: string;
     release_date: string;
     release_date_precision: string;
     show: Show;
@@ -160,6 +162,21 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
     }
     const json = await response.json();
 
+    let artistIDs = json.item?.artists?.map((a: Artist) => a.id);
+
+    let artistIDsString = artistIDs.join(",");
+
+    let res = await fetch(
+        "https://api.spotify.com/v1/artists?ids=" + artistIDsString,
+        {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }
+    );
+
+    let artists = await res.json();
+
+    let artistImages = artists.artists.map((a: Artist) => a.images[0].url);
+
     const currentPlayingKeys: string[] = [
         "device",
         "repeat_state",
@@ -173,6 +190,10 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
 
     const currentlyPlaying = pick(json, currentPlayingKeys) as CurrentlyPlaying;
     currentlyPlaying.message = "ok";
+
+    if (currentlyPlaying.item) {
+        currentlyPlaying.item.artistImages = artistImages;
+    }
 
     const deviceKeys = [
         "id",
@@ -196,6 +217,7 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
         "album",
         "track_number",
         "artists",
+        "artistImages",
         "disc_number",
         "duration_ms",
         "explicit",
