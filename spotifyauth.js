@@ -45,14 +45,16 @@ const startFastify = () => {
             console.log("Refreshing in " + refreshTimeout + " seconds");
         }, refreshTimeout * 1000);
 
-        // reply.send({ access_token: config.access_token });
-        reply.redirect(process.env.SPOTIFY_CALLBACK_URI);
+        reply.send(config.refresh_token);
+        // reply.redirect(process.env.SPOTIFY_CALLBACK_URI);
     });
 
     fastify.listen({ port: 3005 }, () => {
         console.log("Server listening at http://localhost:3005/login/spotify");
     });
 };
+
+startFastify();
 
 module.exports = {
     startFastify,
