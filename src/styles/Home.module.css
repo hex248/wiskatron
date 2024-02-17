@@ -22,8 +22,12 @@
     gap: 10px;
 }
 
+.progressMain {
+    transition: width 1s, background-color 1s, color 1s;
+}
+
 .progressFill {
-    transition: width 1s;
+    transition: width 1s, background-color 1s, color 1s;
 }
 
 .timestamp {

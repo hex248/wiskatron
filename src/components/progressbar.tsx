@@ -30,12 +30,13 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
     return (
         <div
             style={{
+                border: `1px solid ${color}`,
                 width: "100%",
                 height: "100%",
                 borderRadius: "10px",
-                border: `1px solid ${color}`,
                 overflow: "hidden",
             }}
+            className={styles.progressMain}
         >
             <div
                 style={{
