@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import styles from "@/styles/Home.module.css";
 
 interface ProgressBarProps {
     value: number;
@@ -42,6 +43,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
                     height: "100%",
                     backgroundColor: color,
                 }}
+                className={styles.progressFill}
             />
         </div>
     );

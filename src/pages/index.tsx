@@ -37,7 +37,10 @@ export default function Home() {
         fetch("/api/playing")
             .then((res) => res.json())
             .then((data) => {
-                if (data.item?.is_local) {
+                console.log(data);
+                if (data.message === "No content") {
+                    setInfo(undefined);
+                } else if (data.item?.is_local) {
                     setInfo({
                         name: data.item.name,
                         artists: data.item.artists?.map((a: Artist) => a.name),
@@ -100,27 +103,38 @@ export default function Home() {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <main className={`${styles.main} ${inter.className}`}>
-                <Image
-                    className={styles.coverArt}
-                    src={info?.image || ""}
-                    alt=""
-                    width={750}
-                    height={750}
-                ></Image>
-                <div className={styles.progress}>
-                    {formatMSToMins(info?.progress_ms)}
-                    <ProgressBar
-                        value={info?.progress_ms || 0}
-                        max={info?.duration_ms || 1}
-                        color={foreground}
-                        width={750}
-                        height={7.5}
-                    />
-                    {formatMSToMins(info?.duration_ms)}
-                </div>
-                <h1>
-                    {info?.name} - {info?.podcast || info?.artists?.join(", ")}
-                </h1>
+                {info?.is_playing ? (
+                    <>
+                        <Image
+                            className={styles.coverArt}
+                            src={info?.image || ""}
+                            alt=""
+                            width={750}
+                            height={750}
+                        ></Image>
+                        <div className={styles.progress}>
+                            <h3 className={styles.timestamp}>
+                                {formatMSToMins(info?.progress_ms)}
+                            </h3>
+                            <ProgressBar
+                                value={info?.progress_ms || 0}
+                                max={info?.duration_ms || 1}
+                                color={foreground}
+                                width={750}
+                                height={7.5}
+                            />
+                            <h3 className={styles.timestamp}>
+                                {formatMSToMins(info?.duration_ms)}
+                            </h3>
+                        </div>
+                        <h1>
+                            {info?.name} -{" "}
+                            {info?.podcast || info?.artists?.join(", ")}
+                        </h1>
+                    </>
+                ) : (
+                    <h1>nothing is playing</h1>
+                )}
             </main>
         </>
     );
