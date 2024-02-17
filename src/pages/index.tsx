@@ -7,7 +7,7 @@ import ProgressBar from "@/components/progressbar";
 const inter = Inter({ subsets: ["latin"] });
 
 import { useState, useEffect } from "react";
-import { Artist, CurrentlyPlaying } from "../lib/spotify";
+import { Artist } from "../lib/spotify";
 
 const formatMSToMins = (ms: number | undefined) => {
     if (!ms) return "0:00";
@@ -27,12 +27,8 @@ type PlaybackInfo = {
 };
 
 export default function Home() {
-    const [currentlyPlaying, setCurrentlyPlaying] =
-        useState<CurrentlyPlaying>();
-
     const [info, setInfo] = useState<PlaybackInfo>();
 
-    const [progress, setProgress] = useState(0);
     const [background, setBackground] = useState("#000000");
     const [foreground, setForeground] = useState("#ffffff");
 
@@ -41,7 +37,6 @@ export default function Home() {
         fetch("/api/playing")
             .then((res) => res.json())
             .then((data) => {
-                setCurrentlyPlaying(data);
                 if (data.item?.is_local) {
                     setInfo({
                         name: data.item.name,
@@ -82,12 +77,6 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        setProgress(
-            ((info?.progress_ms || 0) / (info?.duration_ms || 1)) * 100
-        );
-    }, [info?.progress_ms]);
-
-    useEffect(() => {
         // update background colour to match album art
         fetch("/api/colorFromImage", { method: "POST", body: info?.image })
             .then((res) => res.json())
@@ -121,8 +110,8 @@ export default function Home() {
                 <div className={styles.progress}>
                     {formatMSToMins(info?.progress_ms)}
                     <ProgressBar
-                        value={progress}
-                        max={100}
+                        value={info?.progress_ms || 0}
+                        max={info?.duration_ms || 1}
                         color={foreground}
                         width={750}
                         height={7.5}
