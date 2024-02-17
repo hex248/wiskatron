@@ -19,28 +19,11 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<Color>
 ) {
-    if (!req.body.startsWith("https")) {
-        console.log(1);
-        return res.send({ hex: "#000000", oppositeHex: "#ffffff" });
-    }
-    console.log(2);
-    // const threshold = 50;
-    // getAverageColor(req.body, {
-    //     ignoredColor: [
-    //         [223, 194, 141, 255, threshold],
-    //         [71, 62, 45, 255, threshold],
-    //     ],
-    // })
-    //     .then((color) => {
-    //         console.log(color);
-    //         res.send(color);
-    //     })
-    //     .catch((e) => {
-    //         res.send({ hex: "#000000" });
-    //     });
+    let path = req.body;
+    if (!path.startsWith("https")) path = "public" + req.body;
 
-    getPixels(req.body, (err: any, pixels: any) => {
-        if (err) {
+    getPixels(path, (err: any, pixels: any) => {
+        if (err || pixels == undefined) {
             res.send({ hex: "#000000", oppositeHex: "#ffffff" });
             return;
         }
@@ -48,13 +31,30 @@ export default async function handler(
         const width = Math.round(Math.sqrt(data.length / 4));
         const height = width;
         extractColors({ data, width, height })
-            .then((colors: Color[]) => {
+            .then((colors: any) => {
+                let originalColors = colors;
                 colors = colors.filter(
-                    (c) => (c.lightness || 0) < 0.9 && (c.area || 1) > 0.2
+                    (c: any) => (c.lightness || 0) < 0.9 && (c.area || 1) > 0.2
                 );
-                colors = colors.sort(
-                    (a, b) => (b.saturation || 0) - (a.saturation || 0)
+                colors = colors.sort((a: any, b: any) => {
+                    if (
+                        b.saturation > a.saturation &&
+                        b.lightness - 0.5 > a.lightness
+                    )
+                        return 1;
+                    if (
+                        b.saturation < a.saturation &&
+                        b.lightness < a.lightness - 0.5
+                    )
+                        return -1;
+                    if (b.saturation > a.saturation) return 1;
+                    if (b.lightness - 0.5 > a.lightness) return 1;
+                });
+                colors = colors.sort((a: any, b: any) => b.area * 1.5 - a.area);
+                originalColors = originalColors.sort(
+                    (a: any, b: any) => b.area - a.area
                 );
+                if (colors.length === 0) colors.push(originalColors[0]);
 
                 res.send(
                     colors[0] || { hex: "#000000", oppositeHex: "#ffffff" }
