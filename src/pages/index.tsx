@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 import { useState, useEffect } from "react";
 import { Artist } from "../lib/spotify";
+import { GeniusData } from "../lib/genius";
 
 const formatMSToMins = (ms: number | undefined) => {
     if (!ms) return "0:00";
@@ -32,20 +33,46 @@ type PlaybackInfo = {
 };
 
 export default function Home() {
-    const [info, setInfo] = useState<PlaybackInfo>();
+    const [info, setInfo] = useState<PlaybackInfo>({
+        name: "",
+        album: "",
+        image: "/placeholder.png",
+        is_playing: false,
+        progress_ms: 0,
+        duration_ms: 0,
+    });
 
     const [background, setBackground] = useState("#000000");
     const [foreground, setForeground] = useState("#ffffff");
+
+    const [geniusInfo, setGeniusInfo] = useState<GeniusData>();
+
+    const formatName = (name: string) => {
+        let newName = name;
+        newName = newName.split(" (with")[0];
+        newName = newName.split(" (feat")[0];
+        newName = newName.split(" (ft")[0];
+        return newName;
+    };
 
     const fetchPlaying = () => {
         fetch("/api/playing")
             .then((res) => res.json())
             .then((data) => {
                 if (data.message === "No content") {
-                    setInfo(undefined);
-                } else if (data.item?.is_local) {
+                    return setInfo({
+                        name: "",
+                        album: "",
+                        image: "/placeholder.png",
+                        is_playing: false,
+                        progress_ms: 0,
+                        duration_ms: 0,
+                    });
+                }
+
+                if (data.item?.is_local) {
                     setInfo({
-                        name: data.item.name,
+                        name: formatName(data.item.name),
                         album: data.item.album.name,
                         artists: data.item.artists?.map((a: Artist) => a.name),
                         image: "/placeholder.png",
@@ -55,7 +82,7 @@ export default function Home() {
                     });
                 } else {
                     setInfo({
-                        name: data.item.name,
+                        name: formatName(data.item.name),
                         album: data.item.album?.name || "",
                         artists: data.item.artists?.map((a: Artist) => a.name),
                         podcast:
@@ -94,6 +121,19 @@ export default function Home() {
             });
     }, [info?.image]);
 
+    useEffect(() => {
+        if (!info?.name) return;
+        setGeniusInfo(undefined);
+        fetch("/api/genius", {
+            method: "POST",
+            body: info?.name + " " + (info?.artists ? info?.artists[0] : ""),
+        })
+            .then((res) => res.json())
+            .then((data: any) => {
+                setGeniusInfo(data);
+            });
+    }, [info?.name, info?.artists?.join(" ")]);
+
     return (
         <>
             <Head>
@@ -113,46 +153,50 @@ export default function Home() {
                         backgroundColor: background,
                     }}
                 >
-                    {info?.is_playing ? (
+                    {info ? (
                         <div className={styles.content}>
-                            <div className={styles.mainPanel}>
-                                <div
-                                    className={styles.information}
-                                    style={{
-                                        borderBottom: `1px solid ${foreground}`,
-                                    }}
-                                ></div>
-                                <div className={styles.progress}>
-                                    <h3
-                                        className={styles.timestamp}
-                                        style={{ textAlign: "right" }}
-                                    >
-                                        {formatMSToMins(info?.progress_ms)}
-                                    </h3>
-                                    <ProgressBar
-                                        value={info?.progress_ms || 0}
-                                        max={info?.duration_ms || 1}
-                                        color={foreground}
-                                    />
-                                    <h3
-                                        className={styles.timestamp}
-                                        style={{ textAlign: "left" }}
-                                    >
-                                        {formatMSToMins(info?.duration_ms)}
-                                    </h3>
-                                </div>
-                            </div>
-
                             <div
-                                className={styles.sidePanel}
+                                className={styles.mainPanel}
                                 style={{
-                                    borderLeft: `1px solid ${foreground}`,
+                                    borderRight: `${
+                                        geniusInfo?.description != undefined &&
+                                        geniusInfo?.description != ""
+                                            ? 1
+                                            : 0
+                                    }px solid ${foreground}`,
                                 }}
                             >
+                                <div className={styles.information}>
+                                    <p
+                                        style={{
+                                            opacity:
+                                                geniusInfo?.description !=
+                                                    undefined &&
+                                                geniusInfo?.description != ""
+                                                    ? 1
+                                                    : 0,
+                                            padding:
+                                                geniusInfo?.description !=
+                                                    undefined &&
+                                                geniusInfo?.description != ""
+                                                    ? "10px"
+                                                    : 0,
+                                        }}
+                                    >
+                                        {geniusInfo?.description}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className={styles.sidePanel}>
                                 <img
                                     className={styles.coverArt}
-                                    src={info?.image || ""}
-                                    alt={`Cover art for ${info?.name}`}
+                                    src={
+                                        info?.image == "/placeholder.png"
+                                            ? geniusInfo?.image ||
+                                              "/placeholder.png"
+                                            : info?.image
+                                    }
+                                    alt=""
                                 ></img>
                                 <div className={styles.metadata}>
                                     <h1 className={styles.trackName}>
@@ -166,6 +210,30 @@ export default function Home() {
                                         {info?.album}
                                     </h1>
                                 </div>
+                            </div>
+                            <div
+                                className={styles.progress}
+                                style={{
+                                    borderTop: `1px solid ${foreground}`,
+                                }}
+                            >
+                                <h3
+                                    className={styles.timestamp}
+                                    style={{ textAlign: "right" }}
+                                >
+                                    {formatMSToMins(info?.progress_ms)}
+                                </h3>
+                                <ProgressBar
+                                    value={info?.progress_ms || 0}
+                                    max={info?.duration_ms || 1}
+                                    color={foreground}
+                                />
+                                <h3
+                                    className={styles.timestamp}
+                                    style={{ textAlign: "left" }}
+                                >
+                                    {formatMSToMins(info?.duration_ms)}
+                                </h3>
                             </div>
                         </div>
                     ) : (
