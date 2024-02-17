@@ -2,6 +2,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
+import ProgressBar from "@/components/progressbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,17 +33,8 @@ export default function Home() {
     const [info, setInfo] = useState<PlaybackInfo>();
 
     const [progress, setProgress] = useState(0);
-
-    useEffect(() => {
-        const timer = setTimeout(
-            () =>
-                setProgress(
-                    ((info?.progress_ms || 0) / (info?.duration_ms || 1)) * 100
-                ),
-            500
-        );
-        return () => clearTimeout(timer);
-    }, [info?.progress_ms]);
+    const [background, setBackground] = useState("#000000");
+    const [foreground, setForeground] = useState("#ffffff");
 
     const fetchPlaying = () => {
         console.log("fetching playing data");
@@ -90,12 +82,20 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
+        setProgress(
+            ((info?.progress_ms || 0) / (info?.duration_ms || 1)) * 100
+        );
+    }, [info?.progress_ms]);
+
+    useEffect(() => {
         // update background colour to match album art
         fetch("/api/colorFromImage", { method: "POST", body: info?.image })
             .then((res) => res.json())
             .then((data) => {
                 document.body.style.backgroundColor = data.hex;
                 document.body.style.color = data.oppositeHex;
+                setBackground(data.hex);
+                setForeground(data.oppositeHex);
             });
     }, [info?.image]);
 
@@ -110,7 +110,6 @@ export default function Home() {
                 />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            {/* <p>{JSON.stringify(currently    Playing, null, 4)}</p> */}
             <main className={`${styles.main} ${inter.className}`}>
                 <Image
                     className={styles.coverArt}
@@ -119,12 +118,20 @@ export default function Home() {
                     width={750}
                     height={750}
                 ></Image>
+                <div className={styles.progress}>
+                    {formatMSToMins(info?.progress_ms)}
+                    <ProgressBar
+                        value={progress}
+                        max={100}
+                        color={foreground}
+                        width={750}
+                        height={7.5}
+                    />
+                    {formatMSToMins(info?.duration_ms)}
+                </div>
                 <h1>
                     {info?.name} - {info?.podcast || info?.artists?.join(", ")}
                 </h1>
-                <p>{progress}</p>
-                {/* {formatMSToMins()} */}
-                {/* {formatMSToMins()} */}
             </main>
         </>
     );
