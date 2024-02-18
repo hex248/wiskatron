@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 const getPixels = require("get-pixels");
 const { extractColors } = require("extract-colors");
+const Vibrant = require("node-vibrant");
 
 type Color = {
     hex: string;
@@ -22,62 +23,41 @@ export default async function handler(
     let path = req.body;
     if (!path.startsWith("https")) path = "public" + req.body;
 
-    getPixels(path, (err: any, pixels: any) => {
-        if (err || pixels == undefined) {
-            res.send({ hex: "#000000", oppositeHex: "#ffffff" });
-            return;
-        }
-        const data = [...pixels.data];
-        const width = Math.round(Math.sqrt(data.length / 4));
-        const height = width;
-        extractColors({ data, width, height })
-            .then((colors: any) => {
-                let originalColors = colors;
-                colors = colors.filter(
-                    (c: any) => (c.lightness || 0) < 0.9 && (c.area || 1) > 0.2
-                );
-                colors = colors.sort((a: any, b: any) => {
-                    if (
-                        b.saturation > a.saturation &&
-                        b.lightness - 0.5 > a.lightness
-                    )
-                        return 1;
-                    if (
-                        b.saturation < a.saturation &&
-                        b.lightness < a.lightness - 0.5
-                    )
-                        return -1;
-                    if (b.saturation > a.saturation) return 1;
-                    if (b.lightness - 0.5 > a.lightness) return 1;
-                });
-                colors = colors.sort((a: any, b: any) => b.area * 1.5 - a.area);
-                originalColors = originalColors.sort(
-                    (a: any, b: any) => b.area - a.area
-                );
-                if (colors.length === 0) colors.push(originalColors[0]);
+    Vibrant.from(path)
+        .getPalette()
+        .then((palette: any) => {
+            let bg = [0, 0, 1];
+            let fg = [0, 0, 1];
 
-                let constrastHSL = contrast(
-                    colors[0].hue * 360,
-                    colors[0].saturation * 100,
-                    colors[0].lightness * 100
-                );
+            let vibrant =
+                palette.Vibrant._population > palette.Muted._population + 600;
+            if (vibrant) {
+                bg = palette.Vibrant._hsl;
+            } else {
+                bg = palette.Muted._hsl;
+            }
 
-                colors[0].oppositeHex = convertToHexFromHSL(
-                    constrastHSL.h,
-                    constrastHSL.s,
-                    constrastHSL.l
-                );
+            fg = contrast(bg[0], bg[1], bg[2] * 100);
 
-                res.send(
-                    colors[0] || { hex: "#000000", oppositeHex: "#ffffff" }
-                );
-            })
-            .catch((err: any) => {
-                console.log(err);
-                res.send({ hex: "#000000", oppositeHex: "#ffffff" });
-                return;
+            let hex = convertToHexFromHSL(
+                bg[0] * 360,
+                bg[1] * 100,
+                bg[2] * 100
+            );
+
+            let oppositeHex = convertToHexFromHSL(
+                fg[0] * 360,
+                fg[1] * 100,
+                fg[2] * 100
+            );
+            console.log(hex);
+            console.log(oppositeHex);
+
+            res.send({
+                hex: hex,
+                oppositeHex: oppositeHex,
             });
-    });
+        });
 }
 
 const convertToHexFromHSL = (h: number, s: number, l: number) => {
@@ -94,7 +74,8 @@ const convertToHexFromHSL = (h: number, s: number, l: number) => {
 };
 
 const contrast = (h: number, s: number, l: number) => {
-    let oppositeHue = (h + 180) % 360;
+    // let oppositeHue = (h + 180) % 360;
+
     let oppositeLightness = l < 50 ? l + 50 : l - 50;
-    return { h: h, s: s, l: oppositeLightness };
+    return [h, s, oppositeLightness / 100];
 };
