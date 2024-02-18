@@ -20,18 +20,6 @@ const formatMSToMins = (ms: number | undefined) => {
     return `${minutes}:${parseInt(seconds) < 10 ? "0" : ""}${seconds}`;
 };
 
-type PlaybackInfo = {
-    name: string;
-    album: string;
-    artists?: string[];
-    artistImages?: string[];
-    podcast?: string;
-    image: string;
-    is_playing: boolean;
-    progress_ms: number;
-    duration_ms: number;
-};
-
 export default function Home() {
     const [ID, setID] = useState("NONE");
     const [name, setName] = useState("");
@@ -43,6 +31,11 @@ export default function Home() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [progressMS, setProgressMS] = useState(0);
     const [durationMS, setDurationMS] = useState(0);
+    const [isPlaylist, setIsPlaylist] = useState(false);
+    const [playlistName, setPlaylistName] = useState("");
+    const [playlistImage, setPlaylistImage] = useState("");
+    const [playlistAuthor, setPlaylistAuthor] = useState("");
+    const [playlistDescription, setPlaylistDescription] = useState("");
 
     const [background, setBackground] = useState("#000000");
     const [foreground, setForeground] = useState("#ffffff");
@@ -60,26 +53,38 @@ export default function Home() {
         const data = await res.json();
         if (data.item) {
             let item = data.item;
+            setID(item.id);
             setName(formatName(item.name));
             setAlbum(item.album.name);
             setArtists(item.artists.map((a: Artist) => a.name));
             setArtistImages(item.artistImages || []);
             setPodcast(item.type === "episode" ? item.show.name : "");
-            setImage(item.album.images[0].url || "/placeholder.png");
+            // if (item.album?.images && item.album.images.length > 0) {
+            setImage(item.album.images[0]?.url || "/placeholder.png");
+            // }
+
             setIsPlaying(data.is_playing);
             setProgressMS(data.progress_ms);
             setDurationMS(item.duration_ms);
+            setIsPlaylist(data.isPlaylist);
+            setPlaylistName(data.playlistName);
+            setPlaylistImage(data.playlistImage);
+            setPlaylistAuthor(data.playlistAuthor);
+            setPlaylistDescription(data.playlistDescription);
 
-            const res2 = await fetch("/api/colorFromImage", {
-                method: "POST",
-                body: item.album.images[0].url,
-            });
+            if (item.album.images.length > 0) {
+                const res2 = await fetch("/api/colorFromImage", {
+                    method: "POST",
+                    body: item.album.images[0]?.url || "/placeholder.png",
+                });
 
-            const colors = await res2.json();
+                const colors = await res2.json();
 
-            setBackground(colors.hex);
-            setForeground(colors.oppositeHex);
+                setBackground(colors.hex);
+                setForeground(colors.oppositeHex);
+            }
         } else {
+            setID("NONE");
             setName("");
             setAlbum("");
             setArtists([]);
@@ -89,6 +94,11 @@ export default function Home() {
             setIsPlaying(false);
             setProgressMS(0);
             setDurationMS(0);
+            setIsPlaylist(false);
+            setPlaylistName("");
+            setPlaylistImage("");
+            setPlaylistAuthor("");
+            setPlaylistDescription("");
         }
     };
 
@@ -154,13 +164,38 @@ export default function Home() {
                                         {album}
                                     </h1>
                                 </div>
-                                <div className={styles.artists}>
+                                {isPlaylist ? (
+                                    <div className={styles.playlist}>
+                                        {/* <p>playlist:</p> */}
+                                        <img
+                                            className={styles.playlistImage}
+                                            src={playlistImage}
+                                        ></img>
+                                        <h1 className={styles.playlistName}>
+                                            {playlistName}
+                                        </h1>
+                                        <h1 className={styles.playlistAuthor}>
+                                            {playlistAuthor}
+                                        </h1>
+                                        {/* <h1
+                                            className={
+                                                styles.playlistDescription
+                                            }
+                                        >
+                                            {playlistDescription}
+                                        </h1> */}
+                                    </div>
+                                ) : (
+                                    ""
+                                )}
+
+                                {/* <div className={styles.artists}>
                                     {artistImages.map((img, i) => (
                                         <div className={styles.artist}>
                                             <img src={img} key={img}></img>
                                         </div>
                                     ))}
-                                </div>
+                                </div> */}
                             </div>
                             <div
                                 className={styles.progress}

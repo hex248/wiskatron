@@ -227,7 +227,7 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
     let playlistImage = "";
     let playlistAuthor = "";
     let playlistDescription = "";
-    if (json.context.type == "playlist") {
+    if (json.context?.type == "playlist") {
         const playlistRes = await fetch(json.context.href, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -235,7 +235,9 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
         const playlistJson = await playlistRes.json();
         isPlaylist = true;
         playlistName = playlistJson.name;
-        playlistImage = playlistJson.images[0].url;
+        if (playlistJson.images && playlistJson.images.length > 0) {
+            playlistImage = playlistJson.images[0].url;
+        } else playlistImage = "/placeholder.png";
         playlistAuthor = playlistJson.owner.display_name;
         playlistDescription = playlistJson.description;
     }
