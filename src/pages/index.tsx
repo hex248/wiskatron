@@ -33,14 +33,16 @@ type PlaybackInfo = {
 };
 
 export default function Home() {
-    const [info, setInfo] = useState<PlaybackInfo>({
-        name: "",
-        album: "",
-        image: "/placeholder.png",
-        is_playing: false,
-        progress_ms: 0,
-        duration_ms: 0,
-    });
+    const [ID, setID] = useState("NONE");
+    const [name, setName] = useState("");
+    const [album, setAlbum] = useState("");
+    const [artists, setArtists] = useState<string[]>([]);
+    const [artistImages, setArtistImages] = useState<string[]>([]);
+    const [podcast, setPodcast] = useState("");
+    const [image, setImage] = useState("/placeholder.png");
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progressMS, setProgressMS] = useState(0);
+    const [durationMS, setDurationMS] = useState(0);
 
     const [background, setBackground] = useState("#000000");
     const [foreground, setForeground] = useState("#ffffff");
@@ -53,79 +55,61 @@ export default function Home() {
         return newName;
     };
 
-    const fetchPlaying = () => {
-        fetch("/api/playing")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.message === "No content") {
-                    return setInfo({
-                        name: "",
-                        album: "",
-                        image: "/placeholder.png",
-                        is_playing: false,
-                        progress_ms: 0,
-                        duration_ms: 0,
-                    });
-                }
+    const fetchPlaying = async () => {
+        const res = await fetch(`/api/playing`);
+        const data = await res.json();
+        if (data.item) {
+            let item = data.item;
+            setName(formatName(item.name));
+            setAlbum(item.album.name);
+            setArtists(item.artists.map((a: Artist) => a.name));
+            setArtistImages(item.artistImages || []);
+            setPodcast(item.type === "episode" ? item.show.name : "");
+            setImage(item.album.images[0].url || "/placeholder.png");
+            setIsPlaying(data.is_playing);
+            setProgressMS(data.progress_ms);
+            setDurationMS(item.duration_ms);
 
-                if (data.item?.is_local) {
-                    setInfo({
-                        name: formatName(data.item.name),
-                        album: data.item.album.name,
-                        artists: data.item.artists?.map((a: Artist) => a.name),
-                        artistImages: data.item.artistImages,
-                        image: "/placeholder.png",
-                        is_playing: data.is_playing,
-                        progress_ms: data.progress_ms,
-                        duration_ms: data.item.duration_ms,
-                    });
-                } else {
-                    setInfo({
-                        name: formatName(data.item.name),
-                        album: data.item.album?.name || "",
-                        artists: data.item.artists?.map((a: Artist) => a.name),
-                        artistImages: data.item.artistImages,
-                        podcast:
-                            data.item.type === "episode"
-                                ? data.item.show.name
-                                : "",
-                        image:
-                            data.item.album?.images[0].url ||
-                            data.item.images[0].url,
-                        is_playing: data.is_playing,
-                        progress_ms: data.progress_ms,
-                        duration_ms: data.item.duration_ms,
-                    });
-                }
+            const res2 = await fetch("/api/colorFromImage", {
+                method: "POST",
+                body: item.album.images[0].url,
             });
+
+            const colors = await res2.json();
+
+            setBackground(colors.hex);
+            setForeground(colors.oppositeHex);
+        } else {
+            setName("");
+            setAlbum("");
+            setArtists([]);
+            setArtistImages([]);
+            setPodcast("");
+            setImage("/placeholder.png");
+            setIsPlaying(false);
+            setProgressMS(0);
+            setDurationMS(0);
+        }
     };
 
-    const pollingRate = 1;
-
-    let timer = setInterval(() => {}, 1000000000);
     useEffect(() => {
-        clearInterval(timer);
         fetchPlaying();
-        timer = setInterval(() => {
-            fetchPlaying();
-        }, pollingRate * 1000);
     }, []);
 
     useEffect(() => {
-        // update background colour to match album art
-        if (info?.image === "/placeholder.png") return;
-        else if (info?.image == "") {
-            setBackground("#c7c7c7");
-            setForeground("#ffffff");
-        } else {
-            fetch("/api/colorFromImage", { method: "POST", body: info?.image })
-                .then((res) => res.json())
-                .then((data) => {
-                    setBackground(data.hex);
-                    setForeground(data.oppositeHex);
-                });
-        }
-    }, [info?.image]);
+        const interval = setInterval(async () => {
+            const res = await fetch("/api/progress");
+            const data = await res.json();
+            setProgressMS(data.progress_ms);
+            setDurationMS(data.duration_ms);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        // song changed
+        fetchPlaying();
+    }, [durationMS + name]);
 
     return (
         <>
@@ -146,7 +130,7 @@ export default function Home() {
                         backgroundColor: background,
                     }}
                 >
-                    {info ? (
+                    {isPlaying ? (
                         <div className={styles.content}>
                             <div
                                 className={styles.mainPanel}
@@ -154,33 +138,28 @@ export default function Home() {
                                     borderRight: `0px solid ${foreground}`,
                                 }}
                             >
-                                <div className={styles.artistImages}>
-                                    {info?.artistImages?.map((image) => (
-                                        <img
-                                            src={image}
-                                            key={image}
-                                            className={styles.artistImage}
-                                        ></img>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className={styles.sidePanel}>
                                 <img
                                     className={styles.coverArt}
-                                    src={info?.image}
+                                    src={image}
                                     alt=""
                                 ></img>
+                            </div>
+                            <div className={styles.sidePanel}>
                                 <div className={styles.metadata}>
-                                    <h1 className={styles.trackName}>
-                                        {info?.name}
-                                    </h1>
+                                    <h1 className={styles.trackName}>{name}</h1>
                                     <h1 className={styles.artistName}>
-                                        {info?.podcast ||
-                                            info?.artists?.join(", ")}
+                                        {podcast || artists?.join(", ")}
                                     </h1>
                                     <h1 className={styles.albumName}>
-                                        {info?.album}
+                                        {album}
                                     </h1>
+                                </div>
+                                <div className={styles.artists}>
+                                    {artistImages.map((img, i) => (
+                                        <div className={styles.artist}>
+                                            <img src={img} key={img}></img>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                             <div
@@ -193,18 +172,18 @@ export default function Home() {
                                     className={styles.timestamp}
                                     style={{ textAlign: "right" }}
                                 >
-                                    {formatMSToMins(info?.progress_ms)}
+                                    {formatMSToMins(progressMS)}
                                 </h3>
                                 <ProgressBar
-                                    value={info?.progress_ms || 0}
-                                    max={info?.duration_ms || 1}
+                                    value={progressMS || 0}
+                                    max={durationMS || 1}
                                     color={foreground}
                                 />
                                 <h3
                                     className={styles.timestamp}
                                     style={{ textAlign: "left" }}
                                 >
-                                    {formatMSToMins(info?.duration_ms)}
+                                    {formatMSToMins(durationMS)}
                                 </h3>
                             </div>
                         </div>

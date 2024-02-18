@@ -1,6 +1,12 @@
 // TYPE DEFINITIONS
 
+export type Progress = {
+    progress_ms: number;
+    duration_ms: number;
+};
+
 export type CurrentlyPlaying = {
+    id: string;
     message: string;
     device?: Device;
     repeat_state?: string; // "off" | "track" | "context"
@@ -25,7 +31,6 @@ export type Device = {
 
 //#region TrackObject
 export type TrackObject = {
-    id: string;
     name: string;
     album: Album;
     artistImages: string[];
@@ -137,10 +142,50 @@ const getAccessToken = async (): Promise<string> => {
             refresh_token: refreshToken,
         }),
     });
+    if (response.status !== 200) {
+        console.log("failed to get access token");
+        return "";
+    }
 
     const json = await response.json();
 
     return json.access_token as string;
+};
+
+export const getProgress = async (): Promise<Progress> => {
+    const accessToken = await getAccessToken();
+    const response = await fetch(
+        "https://api.spotify.com/v1/me/player/currently-playing",
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
+
+    if (response.status === 204) {
+        return {
+            progress_ms: 0,
+            duration_ms: 0,
+        };
+    }
+
+    if (response.status !== 200) {
+        console.log(response);
+        return {
+            progress_ms: 0,
+            duration_ms: 0,
+        };
+    }
+
+    const json = await response.json();
+
+    const progress: Progress = {
+        progress_ms: json.progress_ms,
+        duration_ms: json.item?.duration_ms,
+    };
+
+    return progress;
 };
 
 export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
@@ -156,15 +201,28 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
 
     if (response.status === 204) {
         return {
+            id: "none (no content)",
             message: "No content",
             item: undefined,
         };
     }
+
+    if (response.status !== 200) {
+        console.log(response);
+        return {
+            id: "none (fail)",
+            message: "failed",
+            item: undefined,
+        };
+    }
+
     const json = await response.json();
 
     let artistIDs = json.item?.artists?.map((a: Artist) => a.id);
 
     let artistIDsString = artistIDs.join(",");
+
+    let artistImages: string[] = [];
 
     let res = await fetch(
         "https://api.spotify.com/v1/artists?ids=" + artistIDsString,
@@ -173,11 +231,16 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
         }
     );
 
-    let artists = await res.json();
+    if (res.status === 200) {
+        let artists = await res.json();
 
-    let artistImages = artists.artists.map((a: Artist) => a.images[0].url);
+        artistImages = artists.artists.map((a: Artist) => a.images[0].url);
+    } else {
+        // console.log(res);
+    }
 
     const currentPlayingKeys: string[] = [
+        "id",
         "device",
         "repeat_state",
         "shuffle_state",
@@ -293,6 +356,7 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
             episodeKeys
         ) as EpisodeObject;
     }
+    currentlyPlaying.id = json.item?.id || "no id";
 
     return currentlyPlaying;
 };

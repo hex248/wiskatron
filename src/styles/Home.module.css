@@ -20,15 +20,17 @@
     display: flex;
     /* flex-grow: 1; */
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 450px;
     /* min-width: 0; */
     height: 565px;
     overflow: hidden;
     transition: all 1s;
+    /* padding: 5px; */
 }
 
-.artistImages {
-    padding: 25px;
+.artists {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -37,13 +39,28 @@
     align-items: center;
     overflow: hidden;
     transition: all 1s;
+    margin-bottom: 30px;
 }
 
-.artistImage {
-    width: 150px;
+.artist {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 1s;
+}
+
+.artist h1 {
+    text-align: center;
+    font-size: 1rem;
+}
+
+.artist img {
+    width: 125px;
+    height: 125px;
     border-radius: 5px;
     object-fit: cover;
-    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, 0.1);
 }
 
 .sidePanel {
@@ -51,9 +68,9 @@
     flex-grow: 1;
     flex-shrink: 1;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 20px;
-    padding: 20px;
+    align-items: center;
+    justify-content: space-between;
+    /* padding: 10px; */
     width: 350px;
     /* max-width: 350px; */
     height: 565px;
@@ -64,7 +81,7 @@
 
 .coverArt {
     border-radius: 5px;
-    max-width: 300px;
+    max-width: 425px;
     object-fit: cover;
     box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, 0.3);
 }
@@ -74,6 +91,10 @@
     flex-direction: column;
     text-align: right;
     gap: 10px;
+    width: 100%;
+    margin-top: 15px;
+    margin-right: 15px;
+    /* padding: 15px; */
 }
 
 .trackName {
