@@ -114,7 +114,7 @@ export default function Home() {
     return (
         <>
             <Head>
-                <title>wiskatronn </title>
+                <title>wiskatron</title>
                 <meta name="description" content="wiskatron" />
                 <meta
                     name="viewport"
