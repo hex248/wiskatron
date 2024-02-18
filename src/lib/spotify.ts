@@ -16,6 +16,11 @@ export type CurrentlyPlaying = {
     is_playing?: boolean;
     currently_playing_type?: string; // "track" | "episode" | "ad" | "unknown"
     item: TrackObject | EpisodeObject | undefined;
+    isPlaylist?: boolean;
+    playlistName?: string;
+    playlistImage?: string;
+    playlistAuthor?: string;
+    playlistDescription?: string;
 };
 
 export type Device = {
@@ -217,6 +222,23 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
     }
 
     const json = await response.json();
+    let isPlaylist = false;
+    let playlistName = "";
+    let playlistImage = "";
+    let playlistAuthor = "";
+    let playlistDescription = "";
+    if (json.context.type == "playlist") {
+        const playlistRes = await fetch(json.context.href, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        const playlistJson = await playlistRes.json();
+        isPlaylist = true;
+        playlistName = playlistJson.name;
+        playlistImage = playlistJson.images[0].url;
+        playlistAuthor = playlistJson.owner.display_name;
+        playlistDescription = playlistJson.description;
+    }
 
     let artistIDs = json.item?.artists?.map((a: Artist) => a.id);
 
@@ -224,20 +246,21 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
 
     let artistImages: string[] = [];
 
-    let res = await fetch(
-        "https://api.spotify.com/v1/artists?ids=" + artistIDsString,
-        {
-            headers: { Authorization: `Bearer ${accessToken}` },
-        }
-    );
+    //! ratelimited
+    // let res = await fetch(
+    //     "https://api.spotify.com/v1/artists?ids=" + artistIDsString,
+    //     {
+    //         headers: { Authorization: `Bearer ${accessToken}` },
+    //     }
+    // );
 
-    if (res.status === 200) {
-        let artists = await res.json();
+    // if (res.status === 200) {
+    //     let artists = await res.json();
 
-        artistImages = artists.artists.map((a: Artist) => a.images[0].url);
-    } else {
-        // console.log(res);
-    }
+    //     artistImages = artists.artists.map((a: Artist) => a.images[0].url);
+    // } else {
+    //     // console.log(res);
+    // }
 
     const currentPlayingKeys: string[] = [
         "id",
@@ -249,6 +272,11 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
         "is_playing",
         "currently_playing_type",
         "item",
+        "isPlaylist",
+        "playlistName",
+        "playlistImage",
+        "playlistAuthor",
+        "playlistDescription",
     ];
 
     const currentlyPlaying = pick(json, currentPlayingKeys) as CurrentlyPlaying;
@@ -357,6 +385,12 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
         ) as EpisodeObject;
     }
     currentlyPlaying.id = json.item?.id || "no id";
+
+    currentlyPlaying.isPlaylist = isPlaylist;
+    currentlyPlaying.playlistName = playlistName;
+    currentlyPlaying.playlistImage = playlistImage;
+    currentlyPlaying.playlistAuthor = playlistAuthor;
+    currentlyPlaying.playlistDescription = playlistDescription;
 
     return currentlyPlaying;
 };
