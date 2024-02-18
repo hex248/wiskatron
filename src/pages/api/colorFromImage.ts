@@ -50,8 +50,6 @@ export default async function handler(
                 fg[1] * 100,
                 fg[2] * 100
             );
-            console.log(hex);
-            console.log(oppositeHex);
 
             res.send({
                 hex: hex,
