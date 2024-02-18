@@ -1,6 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-const getPixels = require("get-pixels");
-const { extractColors } = require("extract-colors");
 const Vibrant = require("node-vibrant");
 
 type Color = {
