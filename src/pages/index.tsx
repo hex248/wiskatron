@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import ProgressBar from "@/components/progressbar";
+import FadeImages from "@/components/fadeimages";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -148,11 +149,10 @@ export default function Home() {
                                     borderRight: `0px solid ${foreground}`,
                                 }}
                             >
-                                <img
+                                <FadeImages
+                                    imageURL={image}
                                     className={styles.coverArt}
-                                    src={image}
-                                    alt=""
-                                ></img>
+                                />
                             </div>
                             <div className={styles.sidePanel}>
                                 <div className={styles.metadata}>
@@ -165,37 +165,39 @@ export default function Home() {
                                     </h1>
                                 </div>
                                 {isPlaylist ? (
-                                    <div className={styles.playlist}>
+                                    <div
+                                        className={styles.playlist}
+                                        // style={{
+                                        //     backgroundColor: `${foreground}`,
+                                        //     color: `${background}`,
+                                        // }}
+                                        style={{
+                                            // border: `2px solid ${foreground}`,
+                                            backgroundColor: `${foreground}69`,
+                                            color: `${background}`,
+                                        }}
+                                    >
                                         {/* <p>playlist:</p> */}
-                                        <img
+                                        <FadeImages
+                                            imageURL={playlistImage}
                                             className={styles.playlistImage}
-                                            src={playlistImage}
-                                        ></img>
-                                        <h1 className={styles.playlistName}>
-                                            {playlistName}
-                                        </h1>
-                                        <h1 className={styles.playlistAuthor}>
-                                            {playlistAuthor}
-                                        </h1>
-                                        {/* <h1
-                                            className={
-                                                styles.playlistDescription
-                                            }
-                                        >
-                                            {playlistDescription}
-                                        </h1> */}
+                                        />
+                                        <div>
+                                            <h1 className={styles.playlistName}>
+                                                {playlistName}
+                                            </h1>
+                                            <h1
+                                                className={
+                                                    styles.playlistAuthor
+                                                }
+                                            >
+                                                {playlistAuthor}
+                                            </h1>
+                                        </div>
                                     </div>
                                 ) : (
                                     ""
                                 )}
-
-                                {/* <div className={styles.artists}>
-                                    {artistImages.map((img, i) => (
-                                        <div className={styles.artist}>
-                                            <img src={img} key={img}></img>
-                                        </div>
-                                    ))}
-                                </div> */}
                             </div>
                             <div
                                 className={styles.progress}
