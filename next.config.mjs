@@ -8,6 +8,11 @@ const nextConfig = {
                 hostname: "i.scdn.co",
                 port: "",
             },
+            {
+                protocol: "https",
+                hostname: "mosaic.scdn.co",
+                port: "",
+            },
         ],
     },
 };
