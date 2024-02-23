@@ -160,7 +160,7 @@ const getAccessToken = async (): Promise<string> => {
 export const getProgress = async (): Promise<Progress> => {
     const accessToken = await getAccessToken();
     const response = await fetch(
-        "https://api.spotify.com/v1/me/player/currently-playing",
+        "https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode,track",
         {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -196,7 +196,7 @@ export const getProgress = async (): Promise<Progress> => {
 export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
     const accessToken = await getAccessToken();
     const response = await fetch(
-        "https://api.spotify.com/v1/me/player/currently-playing",
+        "https://api.spotify.com/v1/me/player/currently-playing?additional_types=episode,track",
         {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -244,7 +244,7 @@ export const getCurrentlyPlaying = async (): Promise<CurrentlyPlaying> => {
 
     let artistIDs = json.item?.artists?.map((a: Artist) => a.id);
 
-    let artistIDsString = artistIDs.join(",");
+    let artistIDsString = artistIDs?.join(",");
 
     let artistImages: string[] = [];
 

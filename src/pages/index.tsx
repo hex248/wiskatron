@@ -56,13 +56,15 @@ export default function Home() {
             let item = data.item;
             setID(item.id);
             setName(formatName(item.name));
-            setAlbum(item.album.name);
-            setArtists(item.artists.map((a: Artist) => a.name));
+            setAlbum(item.album?.name);
+            setArtists(item.artists?.map((a: Artist) => a.name));
             setArtistImages(item.artistImages || []);
             setPodcast(item.type === "episode" ? item.show.name : "");
-            // if (item.album?.images && item.album.images.length > 0) {
-            setImage(item.album.images[0]?.url || "/placeholder.png");
-            // }
+            let image =
+                item.album?.images[0]?.url ||
+                item.images[0]?.url ||
+                "/placeholder.png";
+            setImage(image);
 
             setIsPlaying(data.is_playing);
             setProgressMS(data.progress_ms);
@@ -73,10 +75,10 @@ export default function Home() {
             setPlaylistAuthor(data.playlistAuthor);
             setPlaylistDescription(data.playlistDescription);
 
-            if (item.album.images.length > 0) {
+            if (image !== "/placeholder.png") {
                 const res2 = await fetch("/api/colorFromImage", {
                     method: "POST",
-                    body: item.album.images[0]?.url || "/placeholder.png",
+                    body: image,
                 });
 
                 const colors = await res2.json();
