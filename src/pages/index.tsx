@@ -42,10 +42,23 @@ export default function Home() {
     const [foreground, setForeground] = useState("#ffffff");
 
     const formatName = (name: string) => {
+        if (!name) return name;
         let newName = name;
-        newName = newName.split(" (with")[0];
-        newName = newName.split(" (feat")[0];
-        newName = newName.split(" (ft")[0];
+        const thingsToRemove = [
+            " \\(with",
+            " \\(feat",
+            " \\(from",
+            " \\(ft",
+            " \\[with",
+            " \\[feat",
+            " \\[from",
+            " \\[ft",
+        ];
+        for (let thing of thingsToRemove) {
+            let regex = new RegExp(thing, "i");
+            console.log(regex);
+            newName = newName.split(regex)[0];
+        }
         return newName;
     };
 
@@ -56,7 +69,7 @@ export default function Home() {
             let item = data.item;
             setID(item.id);
             setName(formatName(item.name));
-            setAlbum(item.album?.name);
+            setAlbum(formatName(item.album?.name));
             setArtists(item.artists?.map((a: Artist) => a.name));
             setArtistImages(item.artistImages || []);
             setPodcast(item.type === "episode" ? item.show.name : "");
