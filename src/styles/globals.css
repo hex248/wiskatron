@@ -2,6 +2,8 @@
     --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
         "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
         "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+    --overlay-width: 800px;
+    --overlay-height: 175px;
 }
 
 * {
