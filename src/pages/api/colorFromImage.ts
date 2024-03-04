@@ -24,14 +24,14 @@ export default async function handler(
     Vibrant.from(path)
         .getPalette()
         .then((palette: any) => {
-            let bg = [0, 0, 1];
+            let bg = [0, 0, 0];
             let fg = [0, 0, 1];
 
             let vibrant =
                 palette.Vibrant._population > palette.Muted._population + 600;
             if (vibrant) {
                 bg = palette.Vibrant._hsl;
-            } else {
+            } else if (palette.Muted._population > 0) {
                 bg = palette.Muted._hsl;
             }
 
