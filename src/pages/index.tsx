@@ -56,7 +56,6 @@ export default function Home() {
         ];
         for (let thing of thingsToRemove) {
             let regex = new RegExp(thing, "i");
-            console.log(regex);
             newName = newName.split(regex)[0];
         }
         return newName;
@@ -73,10 +72,13 @@ export default function Home() {
             setArtists(item.artists?.map((a: Artist) => a.name));
             setArtistImages(item.artistImages || []);
             setPodcast(item.type === "episode" ? item.show.name : "");
-            let image =
-                item.album?.images[0]?.url ||
-                item.images[0]?.url ||
-                "/placeholder.png";
+            let image = "/placeholder.png";
+            if (item.album?.images.length > 0) {
+                image = item.album?.images[0]?.url;
+            }
+            if (item.images) {
+                image = item.images[0]?.url;
+            }
             setImage(image);
 
             setIsPlaying(data.is_playing);
