@@ -2,6 +2,8 @@
 
 # [wiskatron](https://wiskatron.oliverbryan.com/)
 
+### View project details here: [ob248.com/projects/wiskatron](https://ob248.com/projects/wiskatron)
+
 spotify listening activity nextjs app with dynamic background colour
 
 (only works for my spotify - looking at expanding to work for any user in the future)
