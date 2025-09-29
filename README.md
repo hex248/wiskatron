@@ -1,3 +1,5 @@
+<img src="public/favicon.svg" width="128" />
+
 # [wiskatron](https://wiskatron.oliverbryan.com/)
 
 spotify listening activity nextjs app with dynamic background colour
